@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "otzaria-open-plus",
   "name": "פתיחת ספרייה",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "תוסף JavaScript ללא ממשק לרישום לחצן + ולניווט לספרייה המקורית. מימוש ניסיוני: פתיחת יעד מובנה בלחצן + תלויה בתמיכת הליבה.",
   "author": "אברהם mch",
   "homepage": "https://github.com/avtsye/Otzaria-Open-Plus",
@@ -13,6 +13,7 @@
   "stability": "experimental",
   "permissions": [
     "navigation.write",
+    "plugin.new_tab_page",
     "app.run_on_startup",
     "app.startup_contributions"
   ],
