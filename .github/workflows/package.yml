@@ -34,16 +34,31 @@ jobs:
         working-directory: .otzaria-packager
         run: flutter pub get
 
-      - name: Package with Otzaria official validator and packager
+      - name: Package using the official packager inside Flutter test runtime
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$GITHUB_WORKSPACE/dist"
+          cat > "$GITHUB_WORKSPACE/.otzaria-packager/test/ci_package_open_plus_test.dart" <<'DART'
+          import 'dart:io';
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:otzaria/plugins/services/plugin_packager.dart';
+
+          void main() {
+            test('package JS-only plugin with official Otzaria validator', () async {
+              final root = Platform.environment['GITHUB_WORKSPACE']!;
+              final result = await PluginPackager.packDirectory(
+                directoryPath: root,
+                outputPath: '$root/dist/otzaria-open-plus.otzplugin',
+                force: true,
+              );
+              expect(File(result.outputPath).existsSync(), isTrue);
+              expect(result.fileCount, greaterThanOrEqualTo(2));
+            });
+          }
+          DART
           cd "$GITHUB_WORKSPACE/.otzaria-packager"
-          dart run tool/plugins/package_plugin.dart \
-            "$GITHUB_WORKSPACE" \
-            --output "$GITHUB_WORKSPACE/dist/otzaria-open-plus.otzplugin" \
-            --force
+          flutter test test/ci_package_open_plus_test.dart --reporter expanded
 
       - name: Verify packaged content
         shell: python
