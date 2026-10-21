@@ -1,0 +1,53 @@
+name: Package Otzaria plugin
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JS syntax
+        run: node --check main.js
+
+      - name: Validate manifest and build .otzplugin
+        shell: python
+        run: |
+          import json
+          import pathlib
+          import zipfile
+
+          root = pathlib.Path.cwd()
+          manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+          assert manifest["headless"] is True, "Plugin must be headless"
+          assert manifest["entrypoint"] == "main.js"
+          assert manifest["author"] == "אברהם mch"
+          assert "navigation.write" in manifest["permissions"]
+          entrypoint = root / manifest["entrypoint"]
+          assert entrypoint.is_file()
+          out = root / "dist"
+          out.mkdir(exist_ok=True)
+          target = out / f'{manifest["id"]}-{manifest["version"]}.otzplugin'
+          with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              archive.write(root / "manifest.json", "manifest.json")
+              archive.write(entrypoint, "main.js")
+          with zipfile.ZipFile(target) as archive:
+              assert archive.testzip() is None
+              assert set(archive.namelist()) == {"manifest.json", "main.js"}
+          print(f"Created {target} ({target.stat().st_size} bytes)")
+
+      - name: Upload installable plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Otzaria-Open-Plus-plugin
+          path: dist/*.otzplugin
+          if-no-files-found: error
+          retention-days: 30
