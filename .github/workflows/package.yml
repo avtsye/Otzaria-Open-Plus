@@ -16,7 +16,25 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check JavaScript syntax
-        run: node --check main.js
+        run: |
+          node --check main.js
+          node --check app.js
+
+      - name: Validate manifest and required files
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("manifest.json").read_text(encoding="utf-8"))
+          assert manifest["id"] == "otzaria-open-plus"
+          assert manifest["entrypoint"] == "index.html"
+          assert manifest.get("headless") is not True
+          assert manifest["author"] == "אברהם mch"
+          assert manifest["contributes"]["background"]["entrypoint"] == "background.html"
+          for path in ("index.html", "app.js", "main.js", "background.html"):
+              assert Path(path).is_file(), f"Missing required file: {path}"
+          print("Manifest and plugin files validated.")
 
       - name: Checkout Otzaria official packager
         uses: actions/checkout@v4
@@ -45,7 +63,7 @@ jobs:
           import 'package:otzaria/plugins/services/plugin_packager.dart';
 
           void main() {
-            test('package JS-only plugin with official Otzaria validator', () async {
+            test('package Open Plus with the official Otzaria validator', () async {
               final root = Platform.environment['GITHUB_WORKSPACE']!;
               final result = await PluginPackager.packDirectory(
                 directoryPath: root,
@@ -53,7 +71,7 @@ jobs:
                 force: true,
               );
               expect(File(result.outputPath).existsSync(), isTrue);
-              expect(result.fileCount, greaterThanOrEqualTo(2));
+              expect(result.fileCount, greaterThanOrEqualTo(4));
             });
           }
           DART
@@ -68,11 +86,11 @@ jobs:
           with zipfile.ZipFile(path) as archive:
               assert archive.testzip() is None
               names = set(archive.namelist())
-              assert 'manifest.json' in names
-              assert 'main.js' in names
-              assert not any(name.endswith('.html') for name in names)
+              required = {'manifest.json', 'index.html', 'app.js', 'main.js', 'background.html'}
+              assert required.issubset(names), f'Missing files: {required - names}'
               manifest = json.loads(archive.read('manifest.json'))
-              assert manifest['headless'] is True
+              assert manifest.get('headless') is not True
+              assert manifest['entrypoint'] == 'index.html'
               assert manifest['author'] == 'אברהם mch'
           print('Officially packaged plugin validated:', path)
 
