@@ -10,7 +10,6 @@
       color-scheme: light dark;
       --otz-primary: Highlight;
       --otz-surface: Canvas;
-      --otz-surface-soft: Canvas;
       --otz-text: CanvasText;
       --otz-muted: GrayText;
       --otz-outline: GrayText;
@@ -20,24 +19,45 @@
     * { box-sizing: border-box; }
 
     body {
+      min-width: 280px;
       min-height: 100vh;
+      min-height: 100svh;
       margin: 0;
-      padding: 42px 24px 28px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
       background: var(--otz-surface);
       color: var(--otz-text);
       font-family: var(--otz-font);
       text-align: right;
     }
 
+    .page-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: 76px 24px 68px;
+    }
+
+    .bsd {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      color: var(--otz-muted);
+      font-size: .88rem;
+      font-weight: 500;
+      letter-spacing: .01em;
+      opacity: .82;
+    }
+
     main {
-      width: min(100%, 520px);
+      width: min(100%, 500px);
       display: flex;
       flex-direction: column;
       align-items: stretch;
       gap: 22px;
+      margin: auto;
     }
 
     .intro {
@@ -53,7 +73,7 @@
       display: grid;
       place-items: center;
       color: var(--otz-primary);
-      opacity: .88;
+      opacity: .82;
     }
 
     .symbol svg { width: 42px; height: 42px; display: block; }
@@ -78,10 +98,9 @@
       justify-content: space-between;
       gap: 18px;
       padding: 15px 16px;
-      border: 1px solid var(--otz-outline);
-      border-color: color-mix(in srgb, var(--otz-outline) 34%, transparent);
-      border-radius: 12px;
-      background: var(--otz-surface-soft);
+      border: 1px solid color-mix(in srgb, var(--otz-outline) 30%, transparent);
+      border-radius: 10px;
+      background: transparent;
     }
 
     .setting-copy { min-width: 0; }
@@ -120,7 +139,7 @@
       inset: 0;
       border-radius: 999px;
       background: var(--otz-outline);
-      opacity: .55;
+      opacity: .48;
       transition: background .16s ease, opacity .16s ease;
     }
 
@@ -139,7 +158,7 @@
 
     .switch input:checked + .track {
       background: var(--otz-primary);
-      opacity: 1;
+      opacity: .9;
     }
 
     .switch input:checked + .track::after { transform: translateX(-19px); }
@@ -159,10 +178,25 @@
     }
 
     footer {
-      margin-top: 2px;
+      position: absolute;
+      right: 24px;
+      bottom: 20px;
+      left: 24px;
       color: var(--otz-muted);
       font-size: .82rem;
-      opacity: .85;
+      text-align: center;
+      opacity: .82;
+    }
+
+    @media (max-width: 420px) {
+      .page-shell { padding-inline: 18px; }
+      .bsd { top: 18px; right: 20px; }
+      footer { bottom: 16px; }
+    }
+
+    @media (max-height: 420px) {
+      .page-shell { padding-top: 58px; padding-bottom: 52px; }
+      main { gap: 14px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -171,36 +205,41 @@
   </style>
 </head>
 <body>
-  <main>
-    <section class="intro" aria-labelledby="title">
-      <div class="symbol" aria-hidden="true">
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M32 17c-7-5-15-6-24-4v34c9-2 17-1 24 4 7-5 15-6 24-4V13c-9-2-17-1-24 4Z"/>
-          <path d="M32 17v34M14 22c5-.5 10 .3 14 2M50 22c-5-.5-10 .3-14 2M14 31c5-.5 10 .3 14 2M50 31c-5-.5-10 .3-14 2"/>
-        </svg>
-      </div>
-      <div>
-        <h1 id="title">פתיחת ספרייה</h1>
-        <p>גישה מהירה לספרייה המקורית של אוצריא.</p>
-      </div>
-    </section>
+  <div class="page-shell">
+    <div class="bsd" aria-label="בסייעתא דשמיא">בס״ד</div>
 
-    <section class="setting" aria-label="הגדרות כפתור הפלוס">
-      <div class="setting-copy">
-        <span class="setting-title">הפעלת כפתור +</span>
-        <span class="setting-description">כשהאפשרות פעילה, לחיצה על + תפתח את הספרייה.</span>
-      </div>
-      <label class="switch">
-        <input id="plus-toggle" type="checkbox" role="switch" checked
-               aria-label="הפעלת כפתור פלוס">
-        <span class="track" aria-hidden="true"></span>
-      </label>
-    </section>
+    <main>
+      <section class="intro" aria-labelledby="title">
+        <div class="symbol" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+               stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M32 17c-7-5-15-6-24-4v34c9-2 17-1 24 4 7-5 15-6 24-4V13c-9-2-17-1-24 4Z"/>
+            <path d="M32 17v34M14 22c5-.5 10 .3 14 2M50 22c-5-.5-10 .3-14 2M14 31c5-.5 10 .3 14 2M50 31c-5-.5-10 .3-14 2"/>
+          </svg>
+        </div>
+        <div>
+          <h1 id="title">פתיחת ספרייה</h1>
+          <p>גישה מהירה לספרייה המקורית של אוצריא.</p>
+        </div>
+      </section>
 
-    <p id="status" role="status" aria-live="polite"></p>
+      <section class="setting" aria-label="הגדרות כפתור הפלוס">
+        <div class="setting-copy">
+          <span class="setting-title">הפעלת כפתור +</span>
+          <span class="setting-description">כשהאפשרות פעילה, לחיצה על + תפתח את הספרייה.</span>
+        </div>
+        <label class="switch">
+          <input id="plus-toggle" type="checkbox" role="switch" checked
+                 aria-label="הפעלת כפתור פלוס">
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </section>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+
     <footer>יוצר התוסף: אברהם mch</footer>
-  </main>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
