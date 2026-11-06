@@ -19,23 +19,32 @@ function applyTheme(theme) {
 
   const root = document.documentElement;
   const variables = {
-    "--otz-primary": colors.primary,
-    "--otz-surface": colors.surface,
-    "--otz-surface-soft": colors.surfaceContainerLow || colors.surface,
-    "--otz-text": colors.onSurface,
-    "--otz-muted": colors.onSurfaceVariant || colors.onSurface,
-    "--otz-outline": colors.outlineVariant || colors.outline
+    "--color-primary": colors.primary,
+    "--color-on-primary": colors.onPrimary,
+    "--color-secondary": colors.secondary,
+    "--color-on-secondary": colors.onSecondary,
+    "--color-secondary-container": colors.secondaryContainer,
+    "--color-on-secondary-container": colors.onSecondaryContainer,
+    "--color-surface": colors.surface,
+    "--color-on-surface": colors.onSurface,
+    "--color-on-surface-variant": colors.onSurfaceVariant,
+    "--color-surface-container-high": colors.surfaceContainerHigh,
+    "--color-surface-container-highest": colors.surfaceContainerHighest,
+    "--color-error": colors.error,
+    "--color-on-error": colors.onError,
+    "--color-outline": colors.outline,
+    "--color-outline-variant": colors.outlineVariant || colors.outline
   };
 
   for (const [name, value] of Object.entries(variables)) {
-    if (typeof value === "string" && value) {
-      root.style.setProperty(name, value);
-    }
+    if (typeof value === "string" && value) root.style.setProperty(name, value);
   }
 
   const uiFont = theme.typography?.uiFontFamily;
   if (typeof uiFont === "string" && uiFont.trim()) {
-    root.style.setProperty("--otz-font", uiFont);
+    const family = `'${uiFont.replace(/'/g, "")}', system-ui, sans-serif`;
+    root.style.setProperty("--font-main", family);
+    root.style.setProperty("--font-ui", family);
   }
 
   if (theme.mode === "dark" || theme.mode === "light") {
