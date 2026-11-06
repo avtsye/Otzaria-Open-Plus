@@ -4,16 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>פתיחת ספרייה — אוצריא</title>
+  <title>מוסיף+ — אוצריא</title>
   <style>
     :root {
       color-scheme: light dark;
-      --otz-primary: Highlight;
-      --otz-surface: Canvas;
-      --otz-text: CanvasText;
-      --otz-muted: GrayText;
-      --otz-outline: GrayText;
-      --otz-font: system-ui, sans-serif;
+      --color-primary: Highlight;
+      --color-on-primary: Canvas;
+      --color-surface: Canvas;
+      --color-on-surface: CanvasText;
+      --color-on-surface-variant: GrayText;
+      --color-outline: GrayText;
+      --color-outline-variant: GrayText;
+      --font-main: system-ui, sans-serif;
+      --font-ui: system-ui, sans-serif;
+      --radius-md: 8px;
+      --radius-pill: 999px;
     }
 
     * { box-sizing: border-box; }
@@ -23,9 +28,9 @@
       min-height: 100vh;
       min-height: 100svh;
       margin: 0;
-      background: var(--otz-surface);
-      color: var(--otz-text);
-      font-family: var(--otz-font);
+      background: var(--color-surface);
+      color: var(--color-on-surface);
+      font-family: var(--font-main);
       text-align: right;
     }
 
@@ -44,7 +49,7 @@
       position: absolute;
       top: 24px;
       right: 28px;
-      color: var(--otz-muted);
+      color: var(--color-on-surface-variant);
       font-size: .88rem;
       font-weight: 500;
       letter-spacing: .01em;
@@ -72,7 +77,7 @@
       flex: 0 0 46px;
       display: grid;
       place-items: center;
-      color: var(--otz-primary);
+      color: var(--color-primary);
       opacity: .82;
     }
 
@@ -87,7 +92,7 @@
 
     .intro p {
       margin: 0;
-      color: var(--otz-muted);
+      color: var(--color-on-surface-variant);
       font-size: .94rem;
       line-height: 1.65;
     }
@@ -98,8 +103,8 @@
       justify-content: space-between;
       gap: 18px;
       padding: 15px 16px;
-      border: 1px solid color-mix(in srgb, var(--otz-outline) 30%, transparent);
-      border-radius: 10px;
+      border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-md);
       background: transparent;
     }
 
@@ -114,7 +119,7 @@
 
     .setting-description {
       display: block;
-      color: var(--otz-muted);
+      color: var(--color-on-surface-variant);
       font-size: .84rem;
       line-height: 1.5;
     }
@@ -137,8 +142,8 @@
     .track {
       position: absolute;
       inset: 0;
-      border-radius: 999px;
-      background: var(--otz-outline);
+      border-radius: var(--radius-pill);
+      background: var(--color-outline);
       opacity: .48;
       transition: background .16s ease, opacity .16s ease;
     }
@@ -151,20 +156,20 @@
       width: 19px;
       height: 19px;
       border-radius: 50%;
-      background: var(--otz-surface);
-      box-shadow: 0 1px 2px #0002;
+      background: var(--color-surface);
+      
       transition: transform .16s ease;
     }
 
     .switch input:checked + .track {
-      background: var(--otz-primary);
+      background: var(--color-primary);
       opacity: .9;
     }
 
     .switch input:checked + .track::after { transform: translateX(-19px); }
 
     .switch input:focus-visible + .track {
-      outline: 2px solid var(--otz-primary);
+      outline: 2px solid var(--color-primary);
       outline-offset: 3px;
     }
 
@@ -173,7 +178,7 @@
     #status {
       min-height: 1.3em;
       margin: -10px 2px 0;
-      color: var(--otz-muted);
+      color: var(--color-on-surface-variant);
       font-size: .82rem;
     }
 
@@ -182,7 +187,7 @@
       right: 24px;
       bottom: 20px;
       left: 24px;
-      color: var(--otz-muted);
+      color: var(--color-on-surface-variant);
       font-size: .82rem;
       text-align: center;
       opacity: .82;
@@ -218,7 +223,7 @@
           </svg>
         </div>
         <div>
-          <h1 id="title">פתיחת ספרייה</h1>
+          <h1 id="title">מוסיף+</h1>
           <p>גישה מהירה לספרייה המקורית של אוצריא.</p>
         </div>
       </section>
