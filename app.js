@@ -1,6 +1,17 @@
 "use strict";
 
+const ENABLED_KEY = "openPlus.enabled";
 let handlingNewTabButton = false;
+let plusEnabled = true;
+let settingsReady = false;
+let toggleBusy = false;
+
+const toggle = document.getElementById("plus-toggle");
+const status = document.getElementById("status");
+
+function setStatus(message) {
+  if (status) status.textContent = message;
+}
 
 function applyTheme(theme) {
   const colors = theme?.colorScheme;
@@ -8,12 +19,12 @@ function applyTheme(theme) {
 
   const root = document.documentElement;
   const variables = {
-    "--color-primary": colors.primary,
-    "--color-on-primary": colors.onPrimary,
-    "--color-surface": colors.surface,
-    "--color-on-surface": colors.onSurface,
-    "--color-on-surface-variant": colors.onSurfaceVariant,
-    "--color-outline": colors.outlineVariant
+    "--otz-primary": colors.primary,
+    "--otz-surface": colors.surface,
+    "--otz-surface-soft": colors.surfaceContainerLow || colors.surface,
+    "--otz-text": colors.onSurface,
+    "--otz-muted": colors.onSurfaceVariant || colors.onSurface,
+    "--otz-outline": colors.outlineVariant || colors.outline
   };
 
   for (const [name, value] of Object.entries(variables)) {
@@ -22,8 +33,72 @@ function applyTheme(theme) {
     }
   }
 
+  const uiFont = theme.typography?.uiFontFamily;
+  if (typeof uiFont === "string" && uiFont.trim()) {
+    root.style.setProperty("--otz-font", uiFont);
+  }
+
   if (theme.mode === "dark" || theme.mode === "light") {
     root.style.colorScheme = theme.mode;
+  }
+}
+
+function reflectToggle() {
+  if (!toggle) return;
+  toggle.checked = plusEnabled;
+  toggle.disabled = !settingsReady || toggleBusy;
+}
+
+async function loadSettings() {
+  const response = await Otzaria.call("storage.get", { key: ENABLED_KEY });
+  if (response?.success === false) {
+    throw new Error("לא ניתן לקרוא את ההגדרה השמורה.");
+  }
+
+  plusEnabled = response?.data === null || response?.data === undefined
+    ? true
+    : response.data === true;
+  settingsReady = true;
+  reflectToggle();
+}
+
+async function changePlusState(nextEnabled) {
+  if (!settingsReady || toggleBusy || nextEnabled === plusEnabled) return;
+
+  const previous = plusEnabled;
+  toggleBusy = true;
+  reflectToggle();
+  setStatus("שומר את ההגדרה…");
+
+  try {
+    const registration = await Otzaria.call("plugin.setNewTabPage", {
+      enabled: nextEnabled
+    });
+
+    if (registration?.data !== true) {
+      throw new Error(nextEnabled
+        ? "כפתור + לא הוקצה לתוסף. ייתכן שתוסף אחר כבר משתמש בו."
+        : "לא ניתן לשחרר כרגע את כפתור +.");
+    }
+
+    const saved = await Otzaria.call("storage.set", {
+      key: ENABLED_KEY,
+      value: nextEnabled
+    });
+
+    if (saved?.success === false) {
+      await Otzaria.call("plugin.setNewTabPage", { enabled: previous });
+      throw new Error("ההגדרה לא נשמרה. המצב הקודם שוחזר.");
+    }
+
+    plusEnabled = nextEnabled;
+    setStatus(nextEnabled ? "כפתור + הופעל." : "כפתור + כובה.");
+  } catch (error) {
+    plusEnabled = previous;
+    setStatus(error?.message || "לא ניתן לעדכן את ההגדרה.");
+  } finally {
+    toggleBusy = false;
+    reflectToggle();
   }
 }
 
@@ -50,8 +125,7 @@ async function closeOwnPluginTab() {
 }
 
 async function handlePageOpened(event) {
-  // Manual opening has no source marker, so the information page stays visible.
-  if (event?.source !== "newTabButton" || handlingNewTabButton) return;
+  if (event?.source !== "newTabButton" || handlingNewTabButton || !plusEnabled) return;
 
   handlingNewTabButton = true;
   try {
@@ -77,6 +151,12 @@ async function handlePageOpened(event) {
 
 Otzaria.on("plugin.boot", (payload) => {
   applyTheme(payload?.theme);
+  void loadSettings().catch((error) => {
+    settingsReady = false;
+    reflectToggle();
+    setStatus(error?.message || "לא ניתן לטעון את ההגדרות.");
+    console.error("[Open Plus] Could not load settings:", error);
+  });
 });
 
 Otzaria.on("theme.changed", applyTheme);
@@ -84,11 +164,6 @@ Otzaria.on("plugin.page_opened", (event) => {
   void handlePageOpened(event);
 });
 
-(async () => {
-  try {
-    const response = await Otzaria.call("app.getTheme");
-    applyTheme(response?.data);
-  } catch (error) {
-    console.warn("[Open Plus] Could not load the current theme:", error);
-  }
-})();
+toggle?.addEventListener("change", () => {
+  void changePlusState(toggle.checked);
+});
