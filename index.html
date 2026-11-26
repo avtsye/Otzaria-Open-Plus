@@ -1,196 +1,33 @@
-<!doctype html>
-<html lang="he" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>מוסיף+ — אוצריא</title>
-  <style>
-    :root {
-      color-scheme: light dark;
-      --color-primary: Highlight;
-      --color-on-primary: Canvas;
-      --color-surface: Canvas;
-      --color-on-surface: CanvasText;
-      --color-on-surface-variant: GrayText;
-      --color-outline: GrayText;
-      --color-outline-variant: GrayText;
-      --color-surface-container-high: Canvas;
-      --font-main: system-ui, sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body {
-      min-width: 280px;
-      min-height: 100vh;
-      min-height: 100svh;
-      margin: 0;
-      background: var(--color-surface);
-      color: var(--color-on-surface);
-      font-family: var(--font-main);
-      text-align: right;
-    }
-    .page-shell {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      min-height: 100vh;
-      min-height: 100svh;
-      padding: 76px 24px 68px;
-    }
-    .bsd {
-      position: absolute;
-      top: 24px;
-      right: 28px;
-      color: var(--color-on-surface-variant);
-      font-size: .88rem;
-      font-weight: 500;
-      opacity: .82;
-    }
-    main {
-      width: min(100%, 500px);
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 20px;
-      margin: auto;
-    }
-    .intro { display: flex; align-items: center; gap: 15px; }
-    .symbol {
-      width: 46px; height: 46px; flex: 0 0 46px;
-      display: grid; place-items: center;
-      color: var(--color-primary); opacity: .82;
-    }
-    .symbol svg { width: 42px; height: 42px; display: block; }
-    h1 { margin: 0 0 5px; font-size: 1.2rem; line-height: 1.4; font-weight: 600; }
-    .intro p { margin: 0; color: var(--color-on-surface-variant); font-size: .94rem; line-height: 1.65; }
-    .setting {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 18px; padding: 15px 16px;
-      border: 1px solid var(--color-outline-variant);
-      border-radius: var(--radius-md); background: transparent;
-    }
-    .setting-copy { min-width: 0; display: grid; gap: 4px; }
-    .setting-title { display: block; font-size: .98rem; font-weight: 550; }
-    .setting-description { display: block; color: var(--color-on-surface-variant); font-size: .84rem; line-height: 1.5; }
-    select {
-      max-width: 52%; min-width: 130px; padding: 8px 10px;
-      color: var(--color-on-surface); background: var(--color-surface);
-      border: 1px solid var(--color-outline-variant); border-radius: var(--radius-sm);
-      font: inherit; font-size: .88rem;
-    }
-    .switch { position: relative; flex: 0 0 46px; width: 46px; height: 27px; cursor: pointer; }
-    .switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-    .track {
-      position: absolute; inset: 0; border-radius: var(--radius-pill);
-      background: var(--color-outline); opacity: .48;
-      transition: background .16s ease, opacity .16s ease;
-    }
-    .track::after {
-      content: ""; position: absolute; top: 4px; right: 4px;
-      width: 19px; height: 19px; border-radius: 50%;
-      background: var(--color-surface); transition: transform .16s ease;
-    }
-    .switch input:checked + .track { background: var(--color-primary); opacity: .9; }
-    .switch input:checked + .track::after { transform: translateX(-19px); }
-    .switch input:focus-visible + .track { outline: 2px solid var(--color-primary); outline-offset: 3px; }
-    .switch input:disabled + .track { cursor: wait; opacity: .35; }
-    #status { min-height: 1.3em; margin: -8px 2px 0; color: var(--color-on-surface-variant); font-size: .82rem; }
-    .feedback {
-      align-self: flex-start; padding: 8px 12px;
-      color: var(--color-primary); background: transparent;
-      border: 1px solid var(--color-outline-variant); border-radius: var(--radius-sm);
-      font: inherit; font-size: .88rem; cursor: pointer;
-    }
-    .feedback:disabled { opacity: .5; cursor: wait; }
-    footer {
-      position: absolute; right: 24px; bottom: 20px; left: 24px;
-      color: var(--color-on-surface-variant); font-size: .82rem;
-      text-align: center; opacity: .82;
-    }
-    #handoff {
-      position: fixed; inset: 0; z-index: 5;
-      display: none; flex-direction: column; align-items: center; justify-content: center;
-      gap: 18px; padding: 24px;
-      background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary));
-      color: var(--color-on-surface); text-align: center;
-    }
-    body.handoff-active #handoff { display: flex; }
-    body.handoff-active .page-shell { visibility: hidden; }
-    .handoff-label { color: var(--color-on-surface-variant); font-size: .95rem; letter-spacing: .02em; }
-    .dots { display: inline-flex; gap: 3px; direction: ltr; }
-    .dots span { opacity: 0; animation: dot-in-out 1.35s infinite; }
-    .dots span:nth-child(2) { animation-delay: .18s; }
-    .dots span:nth-child(3) { animation-delay: .36s; }
-    @keyframes dot-in-out { 0%, 15% { opacity: 0; } 35%, 65% { opacity: .85; } 85%, 100% { opacity: 0; } }
-    .handoff-link {
-      display: none; padding: 9px 14px;
-      color: var(--color-on-primary); background: var(--color-primary);
-      border-radius: var(--radius-md); text-decoration: none; font-size: .9rem;
-    }
-    .handoff-link[hidden] { display: none; }
-    body.handoff-active .handoff-link:not([hidden]) { display: inline-flex; }
-    @media (max-width: 420px) {
-      .page-shell { padding-inline: 18px; }
-      .bsd { top: 18px; right: 20px; }
-      footer { bottom: 16px; }
-    }
-    @media (max-height: 420px) {
-      .page-shell { padding-top: 58px; padding-bottom: 52px; }
-      main { gap: 14px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { transition: none !important; animation: none !important; }
-      .dots span { opacity: .65; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page-shell">
-    <div class="bsd" aria-label="בסייעתא דשמיא">בס״ד</div>
-    <main>
-      <section class="intro" aria-labelledby="title">
-        <div class="symbol" aria-hidden="true">
-          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M32 17c-7-5-15-6-24-4v34c9-2 17-1 24 4 7-5 15-6 24-4V13c-9-2-17-1-24 4Z"/>
-            <path d="M32 17v34M14 22c5-.5 10 .3 14 2M50 22c-5-.5-10 .3-14 2M14 31c5-.5 10 .3 14 2M50 31c-5-.5-10 .3-14 2"/>
-          </svg>
-        </div>
-        <div>
-          <h1 id="title">מוסיף+</h1>
-          <p>גישה מהירה למסכים המרכזיים באוצריא.</p>
-        </div>
-      </section>
-      <section class="setting" aria-label="הגדרות כפתור הפלוס">
-        <div class="setting-copy">
-          <span class="setting-title">הפעלת כפתור +</span>
-          <span class="setting-description">הפעלת הכפתור והקצאתו לתוסף.</span>
-        </div>
-        <label class="switch">
-          <input id="plus-toggle" type="checkbox" role="switch" checked aria-label="הפעלת כפתור פלוס">
-          <span class="track" aria-hidden="true"></span>
-        </label>
-      </section>
-      <section class="setting">
-        <div class="setting-copy">
-          <label class="setting-title" for="destination-select">מסך לפתיחה</label>
-          <span class="setting-description">המסך שאליו יוביל כפתור +.</span>
-        </div>
-        <select id="destination-select" aria-label="בחירת מסך לפתיחה">
-          <option value="library">הספרייה</option>
-          <option value="detection">איתור מקורות</option>
-        </select>
-      </section>
-      <p id="status" role="status" aria-live="polite"></p>
-      <button id="feedback-button" class="feedback" type="button">שליחת משוב על התוסף</button>
-    </main>
-    <footer>יוצר התוסף: אברהם mch</footer>
-  </div>
-  <section id="handoff" aria-live="polite" aria-label="מעבר למסך שנבחר">
-    <div class="handoff-label">מעביר<span class="dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></div>
-    <a id="handoff-link" class="handoff-link" href="otzaria://open/detection" hidden>פתיחת מסך איתור מקורות</a>
-  </section>
-  <script src="app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>מוסיף+ — אוצריא</title><style>
+*,*::before,*::after{box-sizing:border-box}html,body{height:100%;width:100%;margin:0}
+body{overflow:hidden;direction:rtl;text-align:right;color:var(--color-on-surface);background:var(--color-surface);font:var(--font-size-base)/var(--line-height) var(--font-ui)}
+.app-shell{height:100%;display:flex;flex-direction:column}.topbar{height:56px;min-height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--color-surface-container-high);flex-shrink:0}
+.topbar h1{margin:0;font-size:16px;font-weight:600;color:var(--color-on-surface);white-space:nowrap}.subtitle{font-size:12px;color:var(--color-on-surface-variant);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bsd{margin-inline-start:auto;font-size:.78em;color:var(--color-on-surface-variant);white-space:nowrap}
+.app-content{flex:1;min-width:0;overflow-y:auto;display:flex;justify-content:center;align-items:center;padding:22px 16px}.settings{width:min(100%,540px);display:flex;flex-direction:column;gap:14px;margin:auto}
+.intro{display:flex;align-items:center;gap:14px;padding:2px 2px 8px}.symbol{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;color:var(--color-primary)}.symbol svg{width:38px;height:38px;display:block}
+.intro-copy h2{margin:0 0 2px;font-size:1.08em;font-weight:600}.intro-copy p{margin:0;color:var(--color-on-surface-variant);font-size:.88em}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 15px;border:1px solid var(--color-outline-variant);border-radius:var(--radius-md);background:var(--color-surface)}.setting-copy{min-width:0;display:grid;gap:3px}.setting-title{display:block;font-size:.94em;font-weight:600}.setting-description{display:block;color:var(--color-on-surface-variant);font-size:.79em;line-height:1.5}
+select,textarea{color:var(--color-on-surface);background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-sm);font:inherit}select{max-width:54%;min-width:132px;padding:7px 9px;font-size:.84em}
+select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}.switch{position:relative;flex:0 0 44px;width:44px;height:26px;cursor:pointer}.switch input{position:absolute;width:1px;height:1px;opacity:0}
+.track{position:absolute;inset:0;border-radius:var(--radius-pill);background:var(--color-outline);opacity:.48;transition:background .16s ease,opacity .16s ease}.track::after{content:"";position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:var(--radius-pill);background:var(--color-surface);transition:transform .16s ease}
+.switch input:checked+.track{background:var(--color-primary);opacity:1}.switch input:checked+.track::after{transform:translateX(-18px)}.switch input:focus-visible+.track{outline:2px solid var(--color-primary);outline-offset:3px}
+#status{min-height:1.4em;margin:-4px 2px 0;color:var(--color-on-surface-variant);font-size:.78em}.feedback{align-self:flex-start;padding:7px 12px;color:var(--color-primary);background:transparent;border:1px solid var(--color-outline);border-radius:var(--radius-sm);font:inherit;font-size:.84em;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}footer{flex-shrink:0;padding:10px 16px 14px;color:var(--color-on-surface-variant);font-size:.76em;text-align:center}.startup-pending .app-shell,.handoff-active .app-shell{visibility:hidden}
+.dialog-backdrop{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:18px;background:color-mix(in srgb,var(--color-on-surface) 32%,transparent)}.dialog-backdrop.open{display:flex}
+.dialog{width:min(100%,460px);max-height:90%;overflow-y:auto;padding:20px;background:var(--color-surface-container-high);border:1px solid var(--color-outline-variant);border-radius:var(--radius-lg)}.dialog h2{margin:0 0 5px;font-size:1.08em;font-weight:600}.dialog-description{margin:0 0 17px;color:var(--color-on-surface-variant);font-size:.84em}
+.field{display:grid;gap:6px;margin-top:13px}.field label{font-size:.84em;font-weight:600}.field select,.field textarea{width:100%;max-width:none}.field textarea{min-height:126px;resize:vertical;padding:10px;font-size:.88em;line-height:1.55}
+.dialog-actions{display:flex;gap:9px;margin-top:18px}.dialog-actions button{min-width:82px;padding:8px 14px;border-radius:var(--radius-sm);font:inherit;font-size:.86em;cursor:pointer}.submit-report{color:var(--color-on-primary);background:var(--color-primary);border:1px solid var(--color-primary)}.cancel-report{color:var(--color-on-surface);background:transparent;border:1px solid var(--color-outline)}
+@media(max-width:600px){.topbar{height:44px;min-height:44px}.app-content{padding:16px 12px}}@media(max-height:440px){.app-content{align-items:flex-start;padding-top:12px}.settings{gap:9px}.setting{padding-block:10px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style></head><body class="startup-pending"><div class="app-shell">
+<header class="topbar"><h1>מוסיף+</h1><span class="subtitle">גישה מהירה למסכים באוצריא</span><span class="bsd" aria-label="בסייעתא דשמיא">בס״ד</span></header>
+<main class="app-content"><div class="settings">
+<section class="intro" aria-labelledby="settings-title"><div class="symbol" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M32 17c-7-5-15-6-24-4v34c9-2 17-1 24 4 7-5 15-6 24-4V13c-9-2-17-1-24 4Z"/><path d="M32 17v34M14 22c5-.5 10 .3 14 2M50 22c-5-.5-10 .3-14 2M14 31c5-.5 10 .3 14 2M50 31c-5-.5-10 .3-14 2"/></svg></div><div class="intro-copy"><h2 id="settings-title">הגדרות כפתור הפלוס</h2><p>בחר מה ייפתח בלחיצה על +.</p></div></section>
+<section class="setting" aria-label="הפעלת כפתור הפלוס"><div class="setting-copy"><span class="setting-title">הפעלת כפתור +</span><span class="setting-description">הקצאת הכפתור לתוסף.</span></div><label class="switch"><input id="plus-toggle" type="checkbox" role="switch" checked aria-label="הפעלת כפתור פלוס"><span class="track" aria-hidden="true"></span></label></section>
+<section class="setting"><div class="setting-copy"><label class="setting-title" for="destination-select">מסך לפתיחה</label><span class="setting-description">היעד שאליו יוביל כפתור +.</span></div><select id="destination-select" aria-label="בחירת מסך לפתיחה"><option value="library">הספרייה</option><option value="detection">איתור מקורות</option></select></section>
+<p id="status" role="status" aria-live="polite"></p><button id="feedback-button" class="feedback" type="button">דיווח / משוב על התוסף</button>
+</div></main><footer>יוצר התוסף: אברהם mch</footer></div>
+<div id="feedback-dialog" class="dialog-backdrop" role="presentation"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title" aria-describedby="feedback-description"><h2 id="feedback-title">דיווח ומשוב</h2><p id="feedback-description" class="dialog-description">נשמח לשמוע על תקלה, הצעה או כל דבר שיכול לשפר את התוסף.</p>
+<div class="field"><label for="feedback-type">סוג המשוב</label><select id="feedback-type"><option value="bug">תקלה</option><option value="crash">קריסה</option><option value="content">תוכן</option><option value="other">הצעה / אחר</option></select></div>
+<div class="field"><label for="feedback-details">תוכן הדיווח</label><textarea id="feedback-details" maxlength="5000" placeholder="תאר כאן את הדיווח או ההצעה…"></textarea></div>
+<div class="dialog-actions"><button id="feedback-submit" class="submit-report" type="button">שליחה</button><button id="feedback-cancel" class="cancel-report" type="button">ביטול</button></div></section></div>
+<script src="app.js"></script></body></html>
