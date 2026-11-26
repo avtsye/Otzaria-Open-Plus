@@ -162,8 +162,11 @@ async function handlePageOpened(event) {
   try {
     if (destination === "detection") {
       if (handoffLink) handoffLink.hidden = false;
-      const closed = await closeOwnPluginTab();
-      if (!closed) console.warn("[Open Plus] Could not close the handoff tab.");
+      // The detection deep link must be activated by a real user click.
+      // Close this temporary tab only after the host receives that click.
+      handoffLink?.addEventListener("click", () => {
+        window.setTimeout(() => { void closeOwnPluginTab(); }, 500);
+      }, { once: true });
       return;
     }
     const navigation = await Otzaria.call("navigation.goTo", { target: "library" });
