@@ -51,7 +51,7 @@ async function handlePageOpened(event){
  if(event?.source!=="newTabButton"||handlingNewTabButton||!plusEnabled)return;handlingNewTabButton=true;
  if(revealTimer!==null){window.clearTimeout(revealTimer);revealTimer=null}document.body.classList.add("handoff-active");
  try{
-  if(destination==="detection"){console.warn("[Open Plus] Automatic detection opening requires a core SDK API.");return}
+  if(destination==="detection"){document.body.classList.remove("handoff-active");revealSettingsPage();setStatus("פתיחה אוטומטית של איתור מקורות עדיין אינה נתמכת ב-SDK של אוצריא; נדרשת תוספת API בליבה.");return}
   const navigation=await Otzaria.call("navigation.goTo",{target:"library"});
   if(navigation?.data!==true){document.body.classList.remove("handoff-active");setStatus("לא ניתן לפתוח את הספרייה.");revealSettingsPage();return}
   await closeOwnPluginTab();
