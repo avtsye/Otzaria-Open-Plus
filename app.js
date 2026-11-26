@@ -1,7 +1,7 @@
 "use strict";
-const ENABLED_KEY="openPlus.enabled",DESTINATION_KEY="openPlus.destination";
-let handlingNewTabButton=false,plusEnabled=true,destination="library",settingsReady=false,toggleBusy=false,revealTimer=null;
-const toggle=document.getElementById("plus-toggle"),destinationSelect=document.getElementById("destination-select"),status=document.getElementById("status");
+const ENABLED_KEY="openPlus.enabled";
+let handlingNewTabButton=false,plusEnabled=true,settingsReady=false,toggleBusy=false,revealTimer=null;
+const toggle=document.getElementById("plus-toggle"),status=document.getElementById("status");
 const feedbackButton=document.getElementById("feedback-button"),feedbackDialog=document.getElementById("feedback-dialog"),feedbackType=document.getElementById("feedback-type"),feedbackDetails=document.getElementById("feedback-details"),feedbackSubmit=document.getElementById("feedback-submit"),feedbackCancel=document.getElementById("feedback-cancel");
 function setStatus(message){if(status)status.textContent=message}
 function revealSettingsPage(){if(!document.body.classList.contains("handoff-active"))document.body.classList.remove("startup-pending")}
@@ -16,23 +16,18 @@ function applyTheme(theme){
  if(Number.isFinite(typography.lineHeight))root.style.setProperty("--line-height",String(typography.lineHeight));
  if(theme.mode==="dark"||theme.mode==="light")root.style.colorScheme=theme.mode;
 }
-function reflectControls(){if(toggle){toggle.checked=plusEnabled;toggle.disabled=!settingsReady||toggleBusy}if(destinationSelect){destinationSelect.value=destination;destinationSelect.disabled=!settingsReady||toggleBusy}}
+function reflectControls(){if(toggle){toggle.checked=plusEnabled;toggle.disabled=!settingsReady||toggleBusy}}
 async function loadSettings(){
- const [enabledResponse,destinationResponse]=await Promise.all([Otzaria.call("storage.get",{key:ENABLED_KEY}),Otzaria.call("storage.get",{key:DESTINATION_KEY})]);
- if(enabledResponse?.success===false||destinationResponse?.success===false)throw new Error("לא ניתן לקרוא את ההגדרות השמורות.");
- plusEnabled=enabledResponse?.data==null?true:enabledResponse.data===true;destination=destinationResponse?.data==="detection"?"detection":"library";settingsReady=true;reflectControls();
+ const response=await Otzaria.call("storage.get",{key:ENABLED_KEY});
+ if(response?.success===false)throw new Error("לא ניתן לקרוא את ההגדרות השמורות.");
+ plusEnabled=response?.data==null?true:response.data===true;settingsReady=true;reflectControls();
 }
-async function saveSetting(key,value){const response=await Otzaria.call("storage.set",{key,value});if(response?.success===false)throw new Error("שמירת ההגדרה נכשלה.")}
+async function saveSetting(value){const response=await Otzaria.call("storage.set",{key:ENABLED_KEY,value});if(response?.success===false)throw new Error("שמירת ההגדרה נכשלה.")}
 async function changePlusState(nextEnabled){
  if(!settingsReady||toggleBusy||nextEnabled===plusEnabled)return;const previous=plusEnabled;toggleBusy=true;reflectControls();setStatus("שומר את ההגדרה…");
- try{const registration=await Otzaria.call("plugin.setNewTabPage",{enabled:nextEnabled});if(registration?.data!==true)throw new Error(nextEnabled?"כפתור + לא הוקצה לתוסף. ייתכן שתוסף אחר כבר משתמש בו.":"לא ניתן לשחרר כרגע את כפתור +.");await saveSetting(ENABLED_KEY,nextEnabled);plusEnabled=nextEnabled;setStatus(nextEnabled?"כפתור + הופעל.":"כפתור + כובה.")}
+ try{const registration=await Otzaria.call("plugin.setNewTabPage",{enabled:nextEnabled});if(registration?.data!==true)throw new Error(nextEnabled?"כפתור + לא הוקצה לתוסף. ייתכן שתוסף אחר כבר משתמש בו.":"לא ניתן לשחרר כרגע את כפתור +.");await saveSetting(nextEnabled);plusEnabled=nextEnabled;setStatus(nextEnabled?"כפתור + הופעל.":"כפתור + כובה.")}
  catch(error){plusEnabled=previous;setStatus(error?.message||"לא ניתן לעדכן את ההגדרה.")}
  finally{toggleBusy=false;reflectControls()}
-}
-async function changeDestination(nextDestination){
- if(!settingsReady||!["library","detection"].includes(nextDestination))return;const previous=destination;destination=nextDestination;reflectControls();
- try{await saveSetting(DESTINATION_KEY,destination);setStatus(destination==="library"?"לחיצה על + תפתח ישירות את הספרייה.":"פתיחה אוטומטית של האיתור דורשת תמיכה נוספת בליבת אוצריא.")}
- catch(error){destination=previous;reflectControls();setStatus(error?.message||"לא ניתן לשמור את יעד הפתיחה.")}
 }
 function openFeedbackDialog(){feedbackDialog?.classList.add("open");feedbackDetails?.focus()}
 function closeFeedbackDialog(){feedbackDialog?.classList.remove("open")}
@@ -51,7 +46,6 @@ async function handlePageOpened(event){
  if(event?.source!=="newTabButton"||handlingNewTabButton||!plusEnabled)return;handlingNewTabButton=true;
  if(revealTimer!==null){window.clearTimeout(revealTimer);revealTimer=null}document.body.classList.add("handoff-active");
  try{
-  if(destination==="detection"){document.body.classList.remove("handoff-active");revealSettingsPage();setStatus("פתיחה אוטומטית של איתור מקורות עדיין אינה נתמכת ב-SDK של אוצריא; נדרשת תוספת API בליבה.");return}
   const navigation=await Otzaria.call("navigation.goTo",{target:"library"});
   if(navigation?.data!==true){document.body.classList.remove("handoff-active");setStatus("לא ניתן לפתוח את הספרייה.");revealSettingsPage();return}
   await closeOwnPluginTab();
@@ -65,7 +59,6 @@ Otzaria.on("plugin.boot",payload=>{
 Otzaria.on("theme.changed",applyTheme);
 Otzaria.on("plugin.page_opened",event=>{void handlePageOpened(event)});
 toggle?.addEventListener("change",()=>{void changePlusState(toggle.checked)});
-destinationSelect?.addEventListener("change",()=>{void changeDestination(destinationSelect.value)});
 feedbackButton?.addEventListener("click",openFeedbackDialog);
 feedbackCancel?.addEventListener("click",closeFeedbackDialog);
 feedbackSubmit?.addEventListener("click",()=>{void submitFeedback()});
