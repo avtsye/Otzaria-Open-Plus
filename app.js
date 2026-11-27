@@ -6,23 +6,34 @@ const feedbackButton=document.getElementById("feedback-button"),feedbackDialog=d
 function setStatus(message){if(status)status.textContent=message}
 function revealSettingsPage(){if(!document.body.classList.contains("handoff-active"))document.body.classList.remove("startup-pending")}
 function applyTheme(theme){
- const colors=theme?.colorScheme;if(!colors)return;const root=document.documentElement;
- const vars={"--color-primary":colors.primary,"--color-on-primary":colors.onPrimary,"--color-secondary":colors.secondary,"--color-on-secondary":colors.onSecondary,"--color-secondary-container":colors.secondaryContainer,"--color-on-secondary-container":colors.onSecondaryContainer,"--color-surface":colors.surface,"--color-on-surface":colors.onSurface,"--color-on-surface-variant":colors.onSurfaceVariant,"--color-surface-container-high":colors.surfaceContainerHigh,"--color-surface-container-highest":colors.surfaceContainerHighest,"--color-error":colors.error,"--color-on-error":colors.onError,"--color-outline":colors.outline,"--color-outline-variant":colors.outlineVariant||colors.outline,"--color-scrim":colors.scrim};
- for(const [name,value] of Object.entries(vars))if(typeof value==="string"&&value)root.style.setProperty(name,value);
+ if(!theme?.colorScheme)return;
+ const cs=theme.colorScheme,root=document.documentElement;
+ const colorVars={
+  "--color-primary":cs.primary,"--color-on-primary":cs.onPrimary,
+  "--color-secondary":cs.secondary,"--color-on-secondary":cs.onSecondary,
+  "--color-secondary-container":cs.secondaryContainer,"--color-on-secondary-container":cs.onSecondaryContainer,
+  "--color-surface":cs.surface,"--color-on-surface":cs.onSurface,"--color-on-surface-variant":cs.onSurfaceVariant,
+  "--color-surface-container-high":cs.surfaceContainerHigh,"--color-surface-container-highest":cs.surfaceContainerHighest,
+  "--color-error":cs.error,"--color-on-error":cs.onError,"--color-outline":cs.outline,
+  "--color-outline-variant":cs.outlineVariant,"--color-scrim":cs.scrim
+ };
+ for(const [name,value] of Object.entries(colorVars))if(typeof value==="string"&&value.trim())root.style.setProperty(name,value);
+ root.style.setProperty("--color-primary-subtle","color-mix(in srgb,var(--color-primary) 12%,transparent)");
+ root.style.setProperty("--color-secondary-subtle","color-mix(in srgb,var(--color-secondary) 12%,transparent)");
  const typography=theme.typography||{};
- const uiFont=typeof typography.uiFont==="string"&&typography.uiFont.trim()?typography.uiFont:(typeof typography.uiFontFamily==="string"&&typography.uiFontFamily.trim()?"'"+typography.uiFontFamily.replace(/'/g,"")+"',system-ui,sans-serif":null);
- if(uiFont)root.style.setProperty("--font-ui",uiFont);
- if(theme.surfaces){
-  if(typeof theme.surfaces.panel==="string")root.style.setProperty("--surface-panel",theme.surfaces.panel);
-  if(typeof theme.surfaces.card==="string")root.style.setProperty("--surface-card",theme.surfaces.card);
-  if(typeof theme.surfaces.topBar==="string")root.style.setProperty("--surface-top-bar",theme.surfaces.topBar);
- }
+ if(typeof typography.uiFont==="string"&&typography.uiFont.trim())root.style.setProperty("--font-ui",typography.uiFont);
+ else if(typeof typography.uiFontFamily==="string"&&typography.uiFontFamily.trim())root.style.setProperty("--font-ui", "'"+typography.uiFontFamily.replace(/['"]/g,"")+"',system-ui,sans-serif");
+ if(Number.isFinite(typography.fontSize))root.style.setProperty("--font-size-base",typography.fontSize+"px");
+ if(Number.isFinite(typography.lineHeight))root.style.setProperty("--line-height",String(typography.lineHeight));
+ const surfaces=theme.surfaces||{};
+ root.style.setProperty("--surface-panel",surfaces.panel||cs.surface);
+ root.style.setProperty("--surface-card",surfaces.card||cs.surface);
+ root.style.setProperty("--surface-top-bar",surfaces.topBar||cs.surfaceContainerHigh);
  if(Number.isFinite(theme.radius)&&theme.radius>0)root.style.setProperty("--radius",theme.radius+"px");
- if(theme.spacing){
-  for(const [key,token] of [["sm","sm"],["md","md"],["lg","lg"]])if(Number.isFinite(theme.spacing[token]))root.style.setProperty("--space-"+key,theme.spacing[token]+"px");
- }
+ if(theme.spacing)for(const key of ["sm","smd","md","lg"])if(Number.isFinite(theme.spacing[key]))root.style.setProperty("--space-"+key,theme.spacing[key]+"px");
  if(Number.isFinite(theme.density?.topBarHeight)&&theme.density.topBarHeight>0)root.style.setProperty("--top-bar-height",theme.density.topBarHeight+"px");
- if(theme.mode==="dark"||theme.mode==="light")root.style.colorScheme=theme.mode;
+ document.body.classList.toggle("dark-mode",theme.mode==="dark");
+ root.style.colorScheme=theme.mode==="dark"?"dark":"light";
 }
 function reflectControls(){if(toggle){toggle.checked=plusEnabled;toggle.disabled=!settingsReady||toggleBusy}}
 async function loadSettings(){
